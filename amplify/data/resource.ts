@@ -1,4 +1,6 @@
 import { type ClientSchema, a, defineData } from "@aws-amplify/backend";
+import { getSubscriptionStatus } from "../functions/get-subscription-status/resource";
+import { createBillingPortalSession } from "../functions/create-billing-portal-session/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -8,17 +10,34 @@ specifies that any user authenticated via an API key can "create", "read",
 =========================================================================*/
 
 const schema = a.schema({
-  // Custom type to define the structure of subscription data returned from Stripe
+  // Define a custom type for subscription data
   SubscriptionStatus: a.customType({
     status: a.string().required(),
-    planName: a.string(),
-    renewalDate: a.string(),
-    currentPeriodStart: a.string(),
+    planName: a.string().required(),
     currentPeriodEnd: a.string(),
+    cancelAtPeriodEnd: a.boolean().required(),
+    userId: a.string().required(),
   }),
 
-  // We'll add the custom queries after we create the Lambda functions
-  // For now, we're just defining the schema structure
+  // Define a custom type for billing portal response
+  BillingPortalSession: a.customType({
+    url: a.string().required(),
+    userId: a.string().required(),
+  }),
+
+  // Custom query that calls our Lambda function
+  getSubscriptionStatus: a
+    .query()
+    .returns(a.ref("SubscriptionStatus"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(getSubscriptionStatus)),
+
+  // Custom query for billing portal
+  createBillingPortalSession: a
+    .query()
+    .returns(a.ref("BillingPortalSession"))
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(createBillingPortalSession)),
 });
 
 export type Schema = ClientSchema<typeof schema>;
