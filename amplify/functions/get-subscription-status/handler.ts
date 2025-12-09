@@ -34,7 +34,10 @@ export const handler: Handler = async (event, context) => {
     // If no subscription exists
     if (!subscription) {
       return {
-        status: "No subscription",
+        status: "none",
+        planName: "No Plan",
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
         userId,
       };
     }
